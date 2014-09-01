@@ -1,4 +1,4 @@
-name := """authenticator-module"""
+name := """silhouette-rest-seed"""
 
 version := "1.0-SNAPSHOT"
 
