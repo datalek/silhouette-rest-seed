@@ -133,8 +133,8 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
 
     new HeaderAuthenticatorService(HeaderAuthenticatorSettings(
       headerName = Play.configuration.getString("silhouette.authenticator.headerName").getOrElse { "X-Auth-Token" },
-      authenticatorIdleTimeout = Play.configuration.getInt("silhouette.authenticator.headerName").getOrElse { 30 * 60 },
-      authenticatorExpiry = Play.configuration.getInt("silhouette.authenticator.headerName").getOrElse { 12 * 60 * 60 }), cacheLayer, idGenerator, Clock())
+      authenticatorIdleTimeout = Play.configuration.getInt("silhouette.authenticator.authenticatorIdleTimeout").getOrElse { 30 * 60 },
+      authenticatorExpiry = Play.configuration.getInt("silhouette.authenticator.authenticatorExpiry").getOrElse { 12 * 60 * 60 }), cacheLayer, idGenerator, Clock())
   }
 
   /**
