@@ -1,7 +1,7 @@
 package models.users
 
-import com.mohiva.play.silhouette.core.Identity
-import com.mohiva.play.silhouette.core.LoginInfo
+import com.mohiva.play.silhouette.api.Identity
+import com.mohiva.play.silhouette.api.LoginInfo
 import java.util.UUID
 
 import models.authorizations._

@@ -1,6 +1,6 @@
 package models.authorizations
 
-import com.mohiva.play.silhouette.core.Authorization
+import com.mohiva.play.silhouette.api.Authorization
 import models.users._
 import play.api.i18n._
 import play.api.mvc.RequestHeader
@@ -29,7 +29,6 @@ object Role {
 
   def apply(role: String): Role = role match {
     case Admin.name => Admin
-    case Promoter.name => Promoter
     case SimpleUser.name => SimpleUser
     case _ => Unknown
   }
@@ -43,14 +42,6 @@ object Role {
  */
 object Admin extends Role {
   val name = "admin"
-}
-
-/**
- * Promoter user role
- */
-object Promoter extends Role {
-  val name = "promoter"
-
 }
 
 /**

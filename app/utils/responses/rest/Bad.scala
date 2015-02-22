@@ -6,8 +6,8 @@ import play.api.libs.functional.syntax._
 /**
  * An util class, represent a bad response, not good
  *
- * @param code
- * @param error
+ * @param code of error
+ * @param error an object that expone the errors
  */
 class Bad(val code: Option[Int], val error: JsValue) {
   def status = "ko"

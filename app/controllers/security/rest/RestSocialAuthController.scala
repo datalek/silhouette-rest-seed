@@ -1,16 +1,17 @@
 package controllers.security.rest
 
-import javax.inject.Inject
 import utils.responses.rest._
 import services.UserService
 import play.api.mvc._
 import play.api.libs.json._
 import play.api.libs.concurrent.Execution.Implicits._
-import com.mohiva.play.silhouette.core._
-import com.mohiva.play.silhouette.core.providers._
-import com.mohiva.play.silhouette.core.exceptions._
-import com.mohiva.play.silhouette.core.services.{ AuthInfoService, AuthInfo }
-import com.mohiva.play.silhouette.contrib.authenticators.HeaderAuthenticator
+import com.mohiva.play.silhouette.api._
+import com.mohiva.play.silhouette.api.services._
+import com.mohiva.play.silhouette.api.exceptions.AuthenticationException
+import com.mohiva.play.silhouette.api.services.AuthInfoService
+import com.mohiva.play.silhouette.impl.authenticators.JWTAuthenticator
+import com.mohiva.play.silhouette.impl.providers._
+import modules.cake.{ HeaderEnvironmentModule, AvatarServiceModule }
 
 import scala.concurrent.{ Future, Promise }
 
@@ -20,10 +21,7 @@ import models.users.User
 /**
  * This controller manage authentication of an user by social service (like facebook and other)
  */
-class RestSocialAuthController @Inject() (
-  implicit val env: Environment[User, HeaderAuthenticator],
-  val userService: UserService,
-  val authInfoService: AuthInfoService) extends Silhouette[User, HeaderAuthenticator] {
+class RestSocialAuthController extends Silhouette[User, JWTAuthenticator] with HeaderEnvironmentModule {
 
   /**
    * Util method to use for retrieve information from authInfo
@@ -34,14 +32,43 @@ class RestSocialAuthController @Inject() (
    */
   protected def profileAndAuthInfo(provider: String, socialAuth: SocialAuth) = {
     env.providers.get(provider) match {
-      case Some(p: OAuth1Provider with CommonSocialProfileBuilder[_]) => //for OAuth1 provider type
+      case Some(p: OAuth1Provider with CommonSocialProfileBuilder) => //for OAuth1 provider type
         val authInfo = OAuth1Info(token = socialAuth.token, socialAuth.secret.get)
         p.retrieveProfile(authInfo).map(profile => (profile, authInfo))
-      case Some(p: OAuth2Provider with CommonSocialProfileBuilder[_]) => //for OAuth2 provider type
+      case Some(p: OAuth2Provider with CommonSocialProfileBuilder) => //for OAuth2 provider type
         val authInfo = OAuth2Info(accessToken = socialAuth.token, expiresIn = socialAuth.expiresIn)
         p.retrieveProfile(authInfo).map(profile => (profile, authInfo))
       case _ => Future.successful(new AuthenticationException(s"Cannot retrive information with unexpected social provider $provider"))
     }
+  }
+
+  /**
+   * Authenticates a user against a social provider.
+   *
+   * @param provider The ID of the provider to authenticate against.
+   * @return The result to display.
+   */
+  def authenticate(provider: String) = Action.async(parse.json) { implicit request =>
+    (env.providers.get(provider) match {
+      case Some(p: SocialProvider with CommonSocialProfileBuilder) =>
+        p.authenticate().flatMap {
+          case Left(result) => Future.successful(result)
+          case Right(authInfo) => for {
+            profile <- p.retrieveProfile(authInfo)
+            user <- userService.save(profile)
+            authInfo <- authInfoService.save(profile.loginInfo, authInfo)
+            authenticator <- env.authenticatorService.create(user.loginInfo)
+            token <- env.authenticatorService.init(authenticator)
+            result <- env.authenticatorService.embed(token, Future.successful {
+              Ok(Json.toJson(Token(token = token, expiresOn = authenticator.expirationDate)))
+            })
+          } yield {
+            env.eventBus.publish(LoginEvent(user, request, request2lang))
+            result
+          }
+        }
+      case _ => Future.failed(new AuthenticationException(s"Cannot authenticate with unexpected social provider $provider"))
+    }).recoverWith(exceptionHandler)
   }
 
   /**
@@ -57,24 +84,26 @@ class RestSocialAuthController @Inject() (
    * @param provider The ID of the provider to authenticate against.
    * @return The result to display.
    */
-  def authenticate(provider: String) = Action.async(parse.json) { implicit request =>
-    request.body.validate[SocialAuth] match {
-      case JsSuccess(socialAuth, _) =>
-        (profileAndAuthInfo(provider, socialAuth).flatMap {
-          case (profile: CommonSocialProfile, authInfo: AuthInfo) =>
-            (for {
-              user <- userService.save(profile)
-              authInfo <- authInfoService.save(profile.loginInfo, authInfo)
-              authenticator <- env.authenticatorService.create(user)
-            } yield {
-              env.eventBus.publish(LoginEvent(user, request, request2lang))
-              val response = Ok(Json.toJson(Token(token = authenticator.id, expiresOn = authenticator.expirationDate)))
-              env.authenticatorService.init(authenticator, Future.successful(response))
-            }).flatMap(r => r)
-        }).recoverWith(exceptionHandler)
-      case JsError(e) => Future.successful(BadRequest(Json.obj("message" -> JsError.toFlatJson(e))))
-    }
-  }
+  //  def authenticate(provider: String) = Action.async(parse.json) { implicit request =>
+  //    ???
+  //    
+  //    request.body.validate[SocialAuth] match {
+  //      case JsSuccess(socialAuth, _) =>
+  //        (profileAndAuthInfo(provider, socialAuth).flatMap {
+  //          case (profile: CommonSocialProfile, authInfo: AuthInfo) =>
+  //            (for {
+  //              user <- userService.save(profile)
+  //              authInfo <- authInfoService.save(profile.loginInfo, authInfo)
+  //              authenticator <- env.authenticatorService.create(user)
+  //            } yield {
+  //              env.eventBus.publish(LoginEvent(user, request, request2lang))
+  //              val response = Ok(Json.toJson(Token(token = authenticator.id, expiresOn = authenticator.expirationDate)))
+  //              env.authenticatorService.init(authenticator, Future.successful(response))
+  //            }).flatMap(r => r)
+  //        }).recoverWith(exceptionHandler)
+  //      case JsError(e) => Future.successful(BadRequest(Json.obj("message" -> JsError.toFlatJson(e))))
+  //    }
+  //  }
 
   /**
    * Link social with a existing user.
@@ -94,18 +123,23 @@ class RestSocialAuthController @Inject() (
       case JsSuccess(socialAuth, _) =>
         (profileAndAuthInfo(provider, socialAuth).flatMap {
           case (profile: CommonSocialProfile, authInfo: AuthInfo) =>
-            (for {
+            for {
               user <- userService.link(request.identity, profile)
               authInfo <- authInfoService.save(profile.loginInfo, authInfo)
-              authenticator <- env.authenticatorService.create(user)
+              authenticator <- env.authenticatorService.create(user.loginInfo)
+              token <- env.authenticatorService.init(authenticator)
+              result <- env.authenticatorService.embed(token, Future.successful {
+                Ok(Json.toJson(Token(token = token, expiresOn = authenticator.expirationDate)))
+              })
             } yield {
               env.eventBus.publish(LoginEvent(user, request, request2lang))
-              val response = Ok(Json.toJson(Token(token = authenticator.id, expiresOn = authenticator.expirationDate)))
-              env.authenticatorService.init(authenticator, Future.successful(response))
-            }).flatMap(r => r)
+              result
+            }
         }).recoverWith(exceptionHandler)
       case JsError(e) => Future.successful(BadRequest(Json.obj("message" -> JsError.toFlatJson(e))))
     }
   }
 
 }
+
+object RestSocialAuthController extends RestSocialAuthController

@@ -2,7 +2,7 @@ package formatters
 
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
-import com.mohiva.play.silhouette.core.LoginInfo
+import com.mohiva.play.silhouette.api.LoginInfo
 
 import models.users.BaseInfo
 

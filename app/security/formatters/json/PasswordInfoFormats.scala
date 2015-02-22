@@ -2,7 +2,7 @@ package security.formatters.json
 
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
-import com.mohiva.play.silhouette.core.providers.PasswordInfo
+import com.mohiva.play.silhouette.api.util.PasswordInfo
 
 object PasswordInfoFormats {
 
@@ -10,5 +10,4 @@ object PasswordInfoFormats {
     (__ \ "hasher").format[String] ~
     (__ \ "password").format[String] ~
     (__ \ "salt").formatNullable[String])(PasswordInfo.apply, unlift(PasswordInfo.unapply))
-
 }
