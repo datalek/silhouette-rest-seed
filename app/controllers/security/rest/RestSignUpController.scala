@@ -64,6 +64,7 @@ class RestSignUpController extends Silhouette[User, JWTAuthenticator]
           } yield {
             env.eventBus.publish(SignUpEvent(user, request, request2lang))
             env.eventBus.publish(LoginEvent(user, request, request2lang))
+            mailService.sendWelcomeEmail(user)
             result
           }
         case Some(u) => /* user already exists! */

@@ -1,0 +1,8 @@
+@(user: models.users.User)(implicit request: RequestHeader, lang: Lang)
+<html>
+<body>
+<p>Welcome @user.info.fullName.getOrElse("???"),</p>
+<p>
+    Your new account is ready!!
+</body>
+</html>

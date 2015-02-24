@@ -25,7 +25,7 @@ trait HeaderEnvironmentModule
   with AuthInfoServiceModule
   with CredentialsProviderModule 
   with SocialProviderModule 
-  /*with MailServiceModule*/ {
+  with MailServiceModule {
 
   /**
    * Configures the module.
