@@ -1,8 +1,8 @@
 package models.daos
 
-import com.mohiva.play.silhouette.core.LoginInfo
-import com.mohiva.play.silhouette.core.providers.PasswordInfo
-import com.mohiva.play.silhouette.contrib.daos.DelegableAuthInfoDAO
+import com.mohiva.play.silhouette.api.LoginInfo
+import com.mohiva.play.silhouette.api.util.PasswordInfo
+import com.mohiva.play.silhouette.impl.daos.DelegableAuthInfoDAO
 import scala.collection.mutable
 import scala.concurrent.Future
 import PasswordInfoDAO._
@@ -31,6 +31,7 @@ class PasswordInfoDAO extends DelegableAuthInfoDAO[PasswordInfo] {
    * @return The retrieved password info or None if no password info could be retrieved for the given login info.
    */
   def find(loginInfo: LoginInfo): Future[Option[PasswordInfo]] = {
+   play.Logger.debug(s"data: ${data}")
     Future.successful(data.get(loginInfo))
   }
 }

@@ -2,15 +2,15 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-GET    /                          @controllers.RestApplicationController.index
+GET    /                          controllers.RestApplicationController.index
+GET    /onlygodoruser             controllers.RestApplicationController.onlyGodOrUser
 
 # Login/SignUp
-POST   /auth/signin/credentials   @controllers.security.rest.RestCredentialsAuthController.authenticate
-POST   /auth/signin/:provider     @controllers.security.rest.RestSocialAuthController.authenticate(provider)
-POST   /auth/link/:provider       @controllers.security.rest.RestSocialAuthController.link(provider)
-POST   /auth/signup               @controllers.security.rest.RestSignUpController.signUp
-GET    /auth/signout              @controllers.security.rest.RestSignUpController.signOut
+POST   /auth/signin/credentials   controllers.security.rest.RestCredentialsAuthController.authenticate
+POST   /auth/signin/:provider     controllers.security.rest.RestSocialAuthController.authenticate(provider)
+POST   /auth/link/:provider       controllers.security.rest.RestSocialAuthController.link(provider)
+POST   /auth/signup               controllers.security.rest.RestSignUpController.signUp
+GET    /auth/signout              controllers.security.rest.RestSignUpController.signOut
 
 # Map static resources from the /public folder to the /assets URL path
 GET    /assets/*file              controllers.Assets.at(path="/public", file)
-GET    /webjars/*file             controllers.WebJarAssets.at(file)

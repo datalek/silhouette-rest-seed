@@ -1,12 +1,14 @@
 package controllers
 
-import models.users.User
-import com.mohiva.play.silhouette.core.{ LogoutEvent, Environment, Silhouette }
-import com.mohiva.play.silhouette.contrib.authenticators.HeaderAuthenticator
+import play.api.libs.json._
 import scala.concurrent.Future
 import play.api.libs.concurrent.Execution.Implicits._
-import play.api.libs.json._
-import javax.inject.Inject
+import models.users.User
+import com.mohiva.play.silhouette.impl.authenticators.JWTAuthenticator
+import com.mohiva.play.silhouette.api.Silhouette
+import modules.cake.HeaderEnvironmentModule
+import models.authorizations._
+
 
 import utils.responses.rest._
 
@@ -15,8 +17,7 @@ import utils.responses.rest._
  *
  * @param env The Silhouette environment.
  */
-class RestApplicationController @Inject() (implicit val env: Environment[User, HeaderAuthenticator])
-  extends Silhouette[User, HeaderAuthenticator] {
+class RestApplicationController extends Silhouette[User, JWTAuthenticator] with HeaderEnvironmentModule {
 
   implicit val userFormat = formatters.json.UserFormats.restFormat
 
@@ -31,5 +32,16 @@ class RestApplicationController @Inject() (implicit val env: Environment[User, H
       case None => Future.successful(Ok(Json.toJson(Good(message = "you are not logged! Login man!"))))
     }
   }
+  
+  /**
+   * Handles the index action.
+   *
+   * @return The result to display.
+   */
+  def onlyGodOrUser = SecuredAction(WithRole(God) || WithRole(SimpleUser)).async { implicit request =>
+    Future.successful(Ok(Json.obj("result" -> "Oh yess GOD")))
+  }
 
 }
+
+object RestApplicationController extends RestApplicationController

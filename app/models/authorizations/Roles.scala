@@ -1,6 +1,6 @@
 package models.authorizations
 
-import com.mohiva.play.silhouette.core.Authorization
+import com.mohiva.play.silhouette.api.Authorization
 import models.users._
 import play.api.i18n._
 import play.api.mvc.RequestHeader
@@ -11,7 +11,7 @@ import play.api.mvc.RequestHeader
 case class WithRole(role: Role) extends Authorization[User] {
   def isAuthorized(user: User)(implicit request: RequestHeader, lang: Lang) = user.roles match {
     case list: Set[Role] => list.contains(role)
-    case _ => false
+    case _               => false
   }
 
 }
@@ -28,10 +28,10 @@ trait Role {
 object Role {
 
   def apply(role: String): Role = role match {
-    case Admin.name => Admin
-    case Promoter.name => Promoter
+    case God.name        => God
+    case Admin.name      => Admin
     case SimpleUser.name => SimpleUser
-    case _ => Unknown
+    case _               => Unknown
   }
 
   def unapply(role: Role): Option[String] = Some(role.name)
@@ -41,16 +41,15 @@ object Role {
 /**
  * Administration role
  */
-object Admin extends Role {
-  val name = "admin"
+object God extends Role {
+  val name = "god"
 }
 
 /**
- * Promoter user role
+ * Administration role
  */
-object Promoter extends Role {
-  val name = "promoter"
-
+object Admin extends Role {
+  val name = "admin"
 }
 
 /**

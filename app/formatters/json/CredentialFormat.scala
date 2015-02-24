@@ -2,7 +2,7 @@ package formatters.json
 
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
-import com.mohiva.play.silhouette.core.providers.Credentials
+import com.mohiva.play.silhouette.api.util.Credentials
 
 /**
  *
