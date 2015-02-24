@@ -1,7 +1,7 @@
 Silhouette REST Seed
 =================================
 
-Example project for Play Framework that use [Silhouette](https://github.com/mohiva/play-silhouette) for authentication and authorization, expose rest api for signup and signin.
+Example project for Play Framework that use [Silhouette](https://github.com/mohiva/play-silhouette) for authentication and authorization, expose rest api for signup, signin and social authentication.
 
 ## Basic usage
 
@@ -79,7 +79,7 @@ curl http://localhost:9000/onlygodoruser -H 'X-Auth-Token:eyJhbGciOiJIUzI1NiIsIn
 < HTTP/1.1 200 OK
 < Content-Type: application/json; charset=utf-8
 
-{"result":"access granted!"}
+{"result":"Oh yess GOD"}
 ```
 
 ## Features
@@ -90,14 +90,14 @@ curl http://localhost:9000/onlygodoruser -H 'X-Auth-Token:eyJhbGciOiJIUzI1NiIsIn
 * Dependency Injection with Cake Pattern
 * Publishing Events
 * Avatar service
+* Mail service
 
 ## Documentation
 
-Consulate the [Silhouette documentation](http://docs.silhouette.mohiva.com/) for more information. If you need help with the integration of Silhouette into your project, don't hesitate and ask questions in our [mailing list](https://groups.google.com/forum/#!forum/play-silhouette) or on [Stack Overflow](http://stackoverflow.com/questions/tagged/playframework).
+Consultate the [Silhouette documentation](http://docs.silhouette.mohiva.com/) for more information. If you need help with the integration of Silhouette into your project, don't hesitate and ask questions in our [mailing list](https://groups.google.com/forum/#!forum/play-silhouette) or on [Stack Overflow](http://stackoverflow.com/questions/tagged/playframework).
 
 ## Next Features
 
-* Mail service
 * Link logged user with one or more social profile (already done, but not tested yet!)
 * Custom avatar service
 
