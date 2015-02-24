@@ -24,25 +24,6 @@ import models.users.User
 class RestSocialAuthController extends Silhouette[User, JWTAuthenticator] with HeaderEnvironmentModule {
 
   /**
-   * Util method to use for retrieve information from authInfo
-   *
-   * @param provider where retrieve information
-   * @param socialAuth object where get auth information
-   * @return a pair with CommonSocialProfile and AuthInfo
-   */
-  protected def profileAndAuthInfo(provider: String, socialAuth: SocialAuth) = {
-    env.providers.get(provider) match {
-      case Some(p: OAuth1Provider with CommonSocialProfileBuilder) => //for OAuth1 provider type
-        val authInfo = OAuth1Info(token = socialAuth.token, socialAuth.secret.get)
-        p.retrieveProfile(authInfo).map(profile => (profile, authInfo))
-      case Some(p: OAuth2Provider with CommonSocialProfileBuilder) => //for OAuth2 provider type
-        val authInfo = OAuth2Info(accessToken = socialAuth.token, expiresIn = socialAuth.expiresIn)
-        p.retrieveProfile(authInfo).map(profile => (profile, authInfo))
-      case _ => Future.successful(new AuthenticationException(s"Cannot retrive information with unexpected social provider $provider"))
-    }
-  }
-
-  /**
    * Authenticates a user against a social provider.
    *
    * @param provider The ID of the provider to authenticate against.
@@ -72,40 +53,6 @@ class RestSocialAuthController extends Silhouette[User, JWTAuthenticator] with H
   }
 
   /**
-   * Authenticates a user against a social provider.
-   *
-   * receive json like this:
-   * {
-   * 	"accessToken": "...",
-   *  	"expiresIn": 0000, //optional
-   *  	"secret": "..."  //this is for OAuth1, for OAuth2 isn't request
-   * }
-   *
-   * @param provider The ID of the provider to authenticate against.
-   * @return The result to display.
-   */
-  //  def authenticate(provider: String) = Action.async(parse.json) { implicit request =>
-  //    ???
-  //    
-  //    request.body.validate[SocialAuth] match {
-  //      case JsSuccess(socialAuth, _) =>
-  //        (profileAndAuthInfo(provider, socialAuth).flatMap {
-  //          case (profile: CommonSocialProfile, authInfo: AuthInfo) =>
-  //            (for {
-  //              user <- userService.save(profile)
-  //              authInfo <- authInfoService.save(profile.loginInfo, authInfo)
-  //              authenticator <- env.authenticatorService.create(user)
-  //            } yield {
-  //              env.eventBus.publish(LoginEvent(user, request, request2lang))
-  //              val response = Ok(Json.toJson(Token(token = authenticator.id, expiresOn = authenticator.expirationDate)))
-  //              env.authenticatorService.init(authenticator, Future.successful(response))
-  //            }).flatMap(r => r)
-  //        }).recoverWith(exceptionHandler)
-  //      case JsError(e) => Future.successful(BadRequest(Json.obj("message" -> JsError.toFlatJson(e))))
-  //    }
-  //  }
-
-  /**
    * Link social with a existing user.
    *
    * receive json like this:
@@ -119,24 +66,37 @@ class RestSocialAuthController extends Silhouette[User, JWTAuthenticator] with H
    * @return The result to display.
    */
   def link(provider: String) = SecuredAction.async(parse.json) { implicit request =>
-    request.body.validate[SocialAuth] match {
-      case JsSuccess(socialAuth, _) =>
-        (profileAndAuthInfo(provider, socialAuth).flatMap {
-          case (profile: CommonSocialProfile, authInfo: AuthInfo) =>
-            for {
-              user <- userService.link(request.identity, profile)
-              authInfo <- authInfoService.save(profile.loginInfo, authInfo)
-              authenticator <- env.authenticatorService.create(user.loginInfo)
-              token <- env.authenticatorService.init(authenticator)
-              result <- env.authenticatorService.embed(token, Future.successful {
-                Ok(Json.toJson(Token(token = token, expiresOn = authenticator.expirationDate)))
-              })
-            } yield {
-              env.eventBus.publish(LoginEvent(user, request, request2lang))
-              result
-            }
-        }).recoverWith(exceptionHandler)
-      case JsError(e) => Future.successful(BadRequest(Json.obj("message" -> JsError.toFlatJson(e))))
+    request.body.validate[SocialAuth].map { socialAuth =>
+      (profileAndAuthInfo(provider, socialAuth).flatMap {
+        case (profile: CommonSocialProfile, authInfo: AuthInfo) =>
+          for {
+            user <- userService.link(request.identity, profile)
+            authInfo <- authInfoService.save(profile.loginInfo, authInfo)
+          } yield {
+            Ok(Json.toJson(Good(message = "link with social completed!")))
+          }
+      }).recoverWith(exceptionHandler)
+    }.recoverTotal {
+      case error => Future.successful(BadRequest(Json.obj("message" -> JsError.toFlatJson(error))))
+    }
+  }
+
+  /**
+   * Util method to use for retrieve information from authInfo
+   *
+   * @param provider where retrieve information
+   * @param socialAuth object where get auth information
+   * @return a pair with CommonSocialProfile and AuthInfo
+   */
+  protected def profileAndAuthInfo(provider: String, socialAuth: SocialAuth) = {
+    env.providers.get(provider) match {
+      case Some(p: OAuth1Provider with CommonSocialProfileBuilder) => //for OAuth1 provider type
+        val authInfo = OAuth1Info(token = socialAuth.token, socialAuth.secret.get)
+        p.retrieveProfile(authInfo).map(profile => (profile, authInfo))
+      case Some(p: OAuth2Provider with CommonSocialProfileBuilder) => //for OAuth2 provider type
+        val authInfo = OAuth2Info(accessToken = socialAuth.token, expiresIn = socialAuth.expiresIn)
+        p.retrieveProfile(authInfo).map(profile => (profile, authInfo))
+      case _ => Future.successful(new AuthenticationException(s"Cannot retrive information with unexpected social provider $provider"))
     }
   }
 
