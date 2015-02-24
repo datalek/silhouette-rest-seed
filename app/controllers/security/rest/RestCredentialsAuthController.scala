@@ -53,7 +53,9 @@ class RestCredentialsAuthController extends Silhouette[User, JWTAuthenticator]
           case Some(user) => env.authenticatorService.create(user.loginInfo).flatMap { authenticator =>
             env.eventBus.publish(LoginEvent(user, request, request2lang))
             env.authenticatorService.init(authenticator).flatMap { token =>
-              Future.successful(Ok(Json.obj("token" -> token)))
+              env.authenticatorService.embed(token, Future.successful {
+                Ok(Json.toJson(Token(token = token, expiresOn = authenticator.expirationDate)))
+              })
             }
           }
           case None =>

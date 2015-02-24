@@ -35,14 +35,12 @@ class UserServiceInMemory extends UserService {
       lastName = signUp.lastName,
       fullName = Some(fullName),
       gender = None)
-    play.Logger.debug(s"Create user\n$loginInfo\n$signUp\n$avatarUrl\n$json\n")
     val user = User(
       loginInfo = loginInfo,
       email = Some(signUp.identifier),
       username = None,
       avatarUrl = avatarUrl,
       info = info)
-    play.Logger.debug(s"Create user$user")
     Future.successful {
       User(
         loginInfo = loginInfo,

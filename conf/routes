@@ -3,6 +3,7 @@
 # ~~~~
 
 GET    /                          controllers.RestApplicationController.index
+GET    /onlygodoruser             controllers.RestApplicationController.onlyGodOrUser
 
 # Login/SignUp
 POST   /auth/signin/credentials   controllers.security.rest.RestCredentialsAuthController.authenticate

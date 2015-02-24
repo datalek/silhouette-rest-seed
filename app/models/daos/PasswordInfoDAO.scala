@@ -31,6 +31,7 @@ class PasswordInfoDAO extends DelegableAuthInfoDAO[PasswordInfo] {
    * @return The retrieved password info or None if no password info could be retrieved for the given login info.
    */
   def find(loginInfo: LoginInfo): Future[Option[PasswordInfo]] = {
+   play.Logger.debug(s"data: ${data}")
     Future.successful(data.get(loginInfo))
   }
 }

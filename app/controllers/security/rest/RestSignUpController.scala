@@ -53,14 +53,18 @@ class RestSignUpController extends Silhouette[User, JWTAuthenticator]
           val authInfo = passwordHasher.hash(signUp.password)
           for {
             avatar <- avatarService.retrieveURL(signUp.identifier)
-            user <- userService.create(loginInfo, signUp, avatar)
+            userToSave <- userService.create(loginInfo, signUp, avatar)
+            user <- userService.save(userToSave)
             authInfo <- authInfoService.save(loginInfo, authInfo)
             authenticator <- env.authenticatorService.create(loginInfo)
             token <- env.authenticatorService.init(authenticator)
+            result <- env.authenticatorService.embed(token, Future.successful {
+              Ok(Json.toJson(Token(token = token, expiresOn = authenticator.expirationDate)))
+            })
           } yield {
             env.eventBus.publish(SignUpEvent(user, request, request2lang))
             env.eventBus.publish(LoginEvent(user, request, request2lang))
-            Ok(Json.toJson(Token(token = authenticator.id, expiresOn = authenticator.expirationDate)))
+            result
           }
         case Some(u) => /* user already exists! */
           Future.successful(Conflict(Json.toJson(Bad(message = "user already exists"))))
