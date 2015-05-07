@@ -7,7 +7,6 @@ import com.mohiva.play.silhouette.impl.util.SecureRandomIDGenerator
 import com.mohiva.play.silhouette.api.Environment
 import com.mohiva.play.silhouette.api.EventBus
 import com.mohiva.play.silhouette.api.util.PlayHTTPLayer
-import modules.cake.{ HeaderAuthenticatorServiceModule/*, CookieAuthenticatorServiceModule */}
 import models.users.User
 import models.daos._
 

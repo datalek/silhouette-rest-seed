@@ -7,7 +7,7 @@ import play.api.libs.json._
 import play.api.libs.concurrent.Execution.Implicits._
 import com.mohiva.play.silhouette.api._
 import com.mohiva.play.silhouette.api.services._
-import com.mohiva.play.silhouette.api.exceptions.AuthenticationException
+import com.mohiva.play.silhouette.api.exceptions.ConfigurationException
 import com.mohiva.play.silhouette.api.services.AuthInfoService
 import com.mohiva.play.silhouette.impl.authenticators.JWTAuthenticator
 import com.mohiva.play.silhouette.impl.providers._
@@ -48,7 +48,7 @@ class RestSocialAuthController extends Silhouette[User, JWTAuthenticator] with H
             result
           }
         }
-      case _ => Future.failed(new AuthenticationException(s"Cannot authenticate with unexpected social provider $provider"))
+      case _ => Future.failed(new ConfigurationException(s"Cannot authenticate with unexpected social provider $provider"))
     }).recoverWith(exceptionHandler)
   }
 
@@ -96,7 +96,7 @@ class RestSocialAuthController extends Silhouette[User, JWTAuthenticator] with H
       case Some(p: OAuth2Provider with CommonSocialProfileBuilder) => //for OAuth2 provider type
         val authInfo = OAuth2Info(accessToken = socialAuth.token, expiresIn = socialAuth.expiresIn)
         p.retrieveProfile(authInfo).map(profile => (profile, authInfo))
-      case _ => Future.successful(new AuthenticationException(s"Cannot retrive information with unexpected social provider $provider"))
+      case _ => Future.successful(new ConfigurationException(s"Cannot retrive information with unexpected social provider $provider"))
     }
   }
 
