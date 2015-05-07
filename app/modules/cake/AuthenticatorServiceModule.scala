@@ -1,7 +1,5 @@
 package modules.cake
 
-package modules.cake
-
 import play.api.Play
 import play.api.Play.current
 /** mohiva module import */
