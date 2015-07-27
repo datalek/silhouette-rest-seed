@@ -1,25 +1,16 @@
 package controllers.security.rest
 
-import utils.responses.rest._
-import services.UserService
+import scala.concurrent.Future
 import play.api.mvc._
 import play.api.libs.json._
 import play.api.libs.concurrent.Execution.Implicits._
-
 import com.mohiva.play.silhouette.api._
 import com.mohiva.play.silhouette.api.exceptions.ConfigurationException
-import com.mohiva.play.silhouette.api.services.AuthInfoService
-import com.mohiva.play.silhouette.api.util.PasswordHasher
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import com.mohiva.play.silhouette.impl.authenticators.JWTAuthenticator
 import com.mohiva.play.silhouette.impl.exceptions.IdentityNotFoundException
-import com.mohiva.play.silhouette.api.Silhouette
 import com.mohiva.play.silhouette.api.util.Credentials
-
 import modules.cake.HeaderEnvironmentModule
-
-import scala.concurrent.{ Future }
-
 import security.models._
 import models.users.User
 
@@ -28,10 +19,8 @@ import models.users.User
  */
 class RestCredentialsAuthController extends Silhouette[User, JWTAuthenticator]
   with HeaderEnvironmentModule {
-
-  /**
-   *
-   */
+  
+  // implicit format for transform json <==> Credential
   implicit val restCredentialFormat = security.formatters.json.CredentialFormat.restFormat
 
   /**
@@ -39,7 +28,7 @@ class RestCredentialsAuthController extends Silhouette[User, JWTAuthenticator]
    *
    * receive json like this:
    * {
-   * 	"identifier": "...",
+   * 	  "identifier": "...",
    *  	"password": "..."
    * }
    *

@@ -1,20 +1,14 @@
 package controllers.security.rest
 
-import utils.responses.rest._
-import services.UserService
 import play.api.mvc._
 import play.api.libs.json._
 import play.api.libs.concurrent.Execution.Implicits._
 import com.mohiva.play.silhouette.api._
-import com.mohiva.play.silhouette.api.services.AuthInfoService
-import com.mohiva.play.silhouette.api.util.PasswordHasher
-import com.mohiva.play.silhouette.impl.authenticators.JWTAuthenticator
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import com.mohiva.play.silhouette.impl.authenticators.JWTAuthenticator
-import com.mohiva.play.silhouette.api.Silhouette
 import modules.cake.{ HeaderEnvironmentModule, AvatarServiceModule }
 import scala.concurrent.Future
-
+import utils.responses.rest._
 import security.models._
 import models.users._
 
@@ -36,8 +30,8 @@ class RestSignUpController extends Silhouette[User, JWTAuthenticator]
    *
    * receive call with json like this:
    * 	{
-   * 		"password": "",
-   * 		"identifier": "",
+   * 		  "password": "",
+   * 		  "identifier": "",
    *  		"firstName": "",
    *    	"lastName": "",
    *     	"fullName": ""
