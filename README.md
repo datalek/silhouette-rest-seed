@@ -67,7 +67,7 @@ curl http://localhost:9000 -H 'X-Auth-Token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC..
 }
 ```
 
-### Secured Acton with autorization
+### Secured Action with autorization
 
 _The token must belong to a user with Admin role_
 
